@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/product-preview.js": {
+    "api/productPreview.js": {
       "maxDuration": 15
     }
   }
