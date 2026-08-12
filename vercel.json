@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/product-preview.js": {
+      "maxDuration": 15
+    }
+  }
+}
