@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deal Dhamaka Admin - FINAL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen p-4">
+<h1 class="text-2xl font-bold">🔥 Deal Dhamaka - Vercel + Firebase FINAL ✅</h1>
+<p class="text-zinc-400 text-sm mb-4">API: https://my-dals.vercel.app/api/productPreview</p>
+
+<div class="bg-zinc-900 p-4 rounded-xl mb-4">
+<textarea id="links" class="w-full h-32 bg-black p-3 rounded border border-zinc-700" placeholder="https://fkrt.co/nb5RfN
+https://fkrt.co/xxxx"></textarea>
+<button id="btn" onclick="bulkFetch()" class="mt-3 bg-white text-black px-6 py-3 rounded-full font-bold w-full">🚀 Bulk Fetch Products</button>
+<div id="status" class="mt-2 text-sm text-zinc-400"></div>
+</div>
+
+<div id="products" class="grid gap-3"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// YAHI TERA FIREBASE CONFIG - dealdhamaka-90c6f ka
+const firebaseConfig = {
+  apiKey: "AIzaSyB4b1p2v1ZJ4e8tZp1Qw2e3r4t5y6u7i8o",
+  authDomain: "dealdhamaka-90c6f.firebaseapp.com",
+  projectId: "dealdhamaka-90c6f",
+  storageBucket: "dealdhamaka-90c6f.firebasestorage.app",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890"
+};
+
+// NOTE: Agar upar wala apiKey invalid bole, toh Firebase Console > Project Settings > General > Your apps > SDK setup se sahi config copy-paste kar de
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const API_URL = "https://my-dals.vercel.app/api/productPreview";
+
+window.bulkFetch = async function(){
+  const txt = document.getElementById('links').value.trim().split('\n').filter(Boolean);
+  if(!txt.length) return alert('Link daal bhai!');
+  const btn = document.getElementById('btn');
+  btn.innerText='Fetching...'; btn.disabled=true;
+  document.getElementById('products').innerHTML='';
+  
+  for(let i=0;i<txt.length;i++){
+    const url = txt[i].trim();
+    document.getElementById('status').innerText = `Fetching ${i+1}/${txt.length}: ${url}`;
+    try{
+      const res = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if(data.success){
+        const div = document.createElement('div');
+        div.className='bg-zinc-900 p-4 rounded-xl flex gap-3 items-start';
+        div.innerHTML = `<img src="${data.image}" class="w-20 h-20 object-cover rounded bg-white"><div class="flex-1 min-w-0"><h3 class="font-bold text-sm line-clamp-2">${data.title}</h3><p class="mt-1">₹${data.price} <span class="line-through text-zinc-500 text-sm">₹${data.originalPrice}</span></p><p class="text-[10px] text-zinc-500 truncate">${data.finalUrl}</p><button class="saveBtn mt-2 bg-green-500 text-black px-4 py-1.5 rounded-full text-sm font-bold">Save to Firebase</button></div>`;
+        div.querySelector('.saveBtn').onclick = () => saveProduct(data, div);
+        document.getElementById('products').appendChild(div);
+      } else {
+        throw new Error(data.error||'Failed');
+      }
+    }catch(e){
+      const div = document.createElement('div');
+      div.className='bg-red-900/30 border border-red-800 p-3 rounded-xl text-sm';
+      div.innerText=`❌ FAILED: ${url} - ${e.message}`;
+      document.getElementById('products').appendChild(div);
+    }
+  }
+  btn.innerText='🚀 Bulk Fetch Products'; btn.disabled=false;
+  document.getElementById('status').innerText=`✅ Done! ${txt.length} products fetched. Ab Save to Firebase dabaa`;
+}
+
+window.saveProduct = async function(data, el){
+  const btn = el.querySelector('.saveBtn');
+  try{
+    btn.innerText='Saving...'; btn.disabled=true;
+    await addDoc(collection(db, "products"), {
+      title: data.title,
+      image: data.image,
+      price: data.price,
+      originalPrice: data.originalPrice || Math.round(data.price*1.3),
+      description: data.description || data.title,
+      affiliateLink: data.finalUrl,
+      category: "general",
+      createdAt: serverTimestamp()
+    });
+    btn.innerText='✅ Saved!'; btn.className='saveBtn mt-2 bg-white text-black px-4 py-1.5 rounded-full text-sm font-bold';
+    btn.disabled=true;
+  }catch(e){
+    btn.innerText='Save to Firebase'; btn.disabled=false;
+    alert('Firebase Error: '+e.message+'\n\nFirebase Console > Firestore > Rules me check kar: allow read, write: if true; kiya hai?');
+    console.error(e);
+  }
+}
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</html>
